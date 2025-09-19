@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as cheerio from "cheerio";
 
-const $ = cheerio.load("<h2 class='title'>Hello</h2>");
-console.log($("h2.title").text());
 
 
 type Item = { id: string; title: string; fix?: string };
