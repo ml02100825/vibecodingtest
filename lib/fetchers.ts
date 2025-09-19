@@ -1,5 +1,5 @@
-import type { CheerioAPI } from "cheerio";
-import * as cheerio from "cheerio";
+  import type { CheerioAPI } from "cheerio";
+  import * as cheerio from "cheerio";
 
 export type FetchResult = {
   finalUrl: string;

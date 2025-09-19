@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { load } from "cheerio";
+import * as cheerio from "cheerio";
+
+const $ = cheerio.load("<h2 class='title'>Hello</h2>");
+console.log($("h2.title").text());
+
 
 type Item = { id: string; title: string; fix?: string };
 type Result = {
@@ -168,7 +172,7 @@ export async function GET(req: NextRequest) {
   // ------------------------
 let score = 100;
 
-  
+
 // Bad は 1 個につき -10 点
 for (const b of bad) {
   score -= 10;
