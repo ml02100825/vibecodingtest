@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+:root { --bg:#0b1020; --card:#121a32; --muted:#8aa0c7; --ok:#1fbf75; --warn:#ffb020; --bad:#ff5a5a; }
+*{box-sizing:border-box}
+html,body{height:100%}
+/* 背景を両端グレー、中央ホワイトのグラデーションに */
+body {
+  @apply bg-gradient-to-r from-gray-100 via-white to-gray-100 text-gray-900;
+}
+a{color:#8fb7ff}
+.container{max-width:960px;margin:0 auto;padding:24px}
+.card{background:var(--card);border:1px solid #263352;border-radius:16px;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.inputRow{display:flex;gap:12px;flex-wrap:wrap}
+.inputRow input{flex:1;min-width:240px;padding:12px 14px;border-radius:12px;border:1px solid #2c3d5a;background:#0e152b;color:#e9eefc}
+.inputRow button{padding:12px 18px;border-radius:12px;border:1px solid #35507a;background:#15315e;color:#e9eefc;cursor:pointer}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;border:1px solid #334a76;color:#bcd0f3;margin-right:8px;margin-bottom:8px}
+.badge.ok{border-color:var(--ok);color:#bdf0d7}
+.badge.warn{border-color:var(--warn);color:#ffe0a6}
+.badge.bad{border-color:var(--bad);color:#ffc7c7}
+.scoreWrap{display:flex;align-items:center;gap:16px}
+.score{font-size:48px;font-weight:800}
+.muted{color:var(--muted);font-size:14px}
+.list{margin:0;padding-left:18px}
+.hint{font-size:12px;color:#a8b6d8}
+.sectionTitle{margin:24px 0 8px 0;font-weight:700}
+.preview{background:#0e152b;border:1px solid #263352;border-radius:16px;padding:16px}
+.preview .title{font-weight:700;margin:4px 0}
+.preview img{max-width:100%;height:auto;border-radius:12px;border:1px solid #1c2944}
+.previewWrap{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+footer{color:#8aa0c7;margin-top:24px}
