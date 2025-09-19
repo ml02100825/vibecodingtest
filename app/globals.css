@@ -2,34 +2,181 @@
 @tailwind components;
 @tailwind utilities;
 
-
-
-:root { --bg:#0b1020; --card:#121a32; --muted:#8aa0c7; --ok:#1fbf75; --warn:#ffb020; --bad:#ff5a5a; }
-*{box-sizing:border-box}
-html,body{height:100%}
-/* 背景を両端グレー、中央ホワイトのグラデーションに */
+/* ベース */
 body {
-  @apply bg-gradient-to-r from-gray-100 via-white to-gray-100 text-gray-900;
+  background: #f9fafb;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #111827;
+  margin: 0;
 }
-a{color:#8fb7ff}
-.container{max-width:960px;margin:0 auto;padding:24px}
-.card{background:var(--card);border:1px solid #263352;border-radius:16px;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
-.inputRow{display:flex;gap:12px;flex-wrap:wrap}
-.inputRow input{flex:1;min-width:240px;padding:12px 14px;border-radius:12px;border:1px solid #2c3d5a;background:#0e152b;color:#e9eefc}
-.inputRow button{padding:12px 18px;border-radius:12px;border:1px solid #35507a;background:#15315e;color:#e9eefc;cursor:pointer}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;border:1px solid #334a76;color:#bcd0f3;margin-right:8px;margin-bottom:8px}
-.badge.ok{border-color:var(--ok);color:#bdf0d7}
-.badge.warn{border-color:var(--warn);color:#ffe0a6}
-.badge.bad{border-color:var(--bad);color:#ffc7c7}
-.scoreWrap{display:flex;align-items:center;gap:16px}
-.score{font-size:48px;font-weight:800}
-.muted{color:var(--muted);font-size:14px}
-.list{margin:0;padding-left:18px}
-.hint{font-size:12px;color:#a8b6d8}
-.sectionTitle{margin:24px 0 8px 0;font-weight:700}
-.preview{background:#0e152b;border:1px solid #263352;border-radius:16px;padding:16px}
-.preview .title{font-weight:700;margin:4px 0}
-.preview img{max-width:100%;height:auto;border-radius:12px;border:1px solid #1c2944}
-.previewWrap{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-footer{color:#8aa0c7;margin-top:24px}
+
+/* 2:6:2 レイアウト（PC） */
+.container-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+.main-col { grid-column: 1 / -1; }
+@media (min-width: 1024px) {
+  .container-grid { grid-template-columns: 2fr 6fr 2fr; }
+  .main-col { grid-column: 2 / 3; }
+}
+
+/* カード */
+.card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border: 1px solid #e5e7eb;
+  padding: 20px;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+/* 入力行 */
+.stack-sm { display: flex; flex-direction: column; gap: 12px; }
+@media (min-width: 640px) { .stack-sm { flex-direction: row; } }
+
+.input-blue {
+  background-color: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #111827;
+  flex: 1;
+}
+.input-blue:focus { outline: none; background: #e0f2fe; border-color: #38bdf8; }
+
+.btn {
+  background: #111827; color: #fff; border: 0; border-radius: 8px;
+  padding: 8px 12px; cursor: pointer;
+}
+.btn:hover { background: #0b1220; }
+.btn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* 結果カード（色トーン） */
+/* 既存 …（省略） */
+
+/* 結果カード（色トーン） */
+:root{
+  --tone-good: 22,163,74;
+  --tone-mid: 245,158,11;
+  --tone-bad: 220,38,38;
+}
+.result-card { position: relative; padding-top: 28px; } /* ← ラベル分の余白を少し確保 */
+.tone-good { background: rgba(var(--tone-good), 0.10); border-color: rgba(var(--tone-good), 0.25); }
+.tone-mid  { background: rgba(var(--tone-mid),  0.10); border-color: rgba(var(--tone-mid),  0.25); }
+.tone-bad  { background: rgba(var(--tone-bad),  0.10); border-color: rgba(var(--tone-bad),  0.25); }
+
+/* 右上ラベル：中央配置→右上固定に修正 */
+.result-label {
+  position: absolute;
+  right: 16px;
+  top: 10px;          /* ← ここを 50%→10px に */
+  transform: none;    /* ← 中央寄せの transform を無効化 */
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.label-good { color: rgb(var(--tone-good)); }
+.label-mid  { color: rgb(var(--tone-mid)); }
+.label-bad  { color: rgb(var(--tone-bad)); }
+
+
+/* サマリー */
+.summary-grid { display: flex; gap: 12px; margin-top: 12px; }
+.summary-box { flex: 1; text-align: center; border-radius: 8px; padding: 8px; font-size: .9rem; font-weight: 500; }
+.summary-box.good { background: #ecfdf5; color: #047857; }
+.summary-box.warn { background: #fefce8; color: #92400e; }
+.summary-box.bad  { background: #fef2f2; color: #b91c1c; }
+
+.progress-bar { height: 8px; border-radius: 4px; background: #e5e7eb; overflow: hidden; margin-top: 8px; }
+.progress-bar-fill { height: 100%; background: linear-gradient(to right, #22c55e, #facc15, #ef4444); }
+
+/* インサイト（左右2カラム） */
+.insight-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 768px) { .insight-grid { grid-template-columns: 1fr 1fr; } }
+.insight-box { border-radius: 8px; padding: 12px; font-size: .9rem; }
+.insight-good { background: #ecfdf5; color: #047857; }
+.insight-warn { background: #fefce8; color: #92400e; }
+.insight-bad  { background: #fef2f2; color: #b91c1c; }
+
+/* ===== ソーシャルプレビュー ===== */
+.social-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 768px) { .social-grid { grid-template-columns: 1fr 1fr; } }
+.social-card { border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background: #fff; }
+
+/* X */
+.social-title { font-weight: 600; font-size: .9rem; color: #374151; padding: 12px 12px 0; }
+.x-thumb { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: #f3f4f6; }
+.x-thumb-fallback { display:flex; align-items:center; justify-content:center; color:#9ca3af; }
+.x-meta { padding: 12px; }
+.x-title { font-weight: 700; margin-bottom: 4px; }
+.x-desc { font-size: .9rem; color: #4b5563; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.x-domain { font-size: .8rem; color: #6b7280; }
+
+/* Instagram */
+.ig-header { display:flex; align-items:center; gap:8px; padding: 10px 12px 0; }
+.ig-avatar { width: 28px; height: 28px; border-radius: 50%; background: conic-gradient(#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5); }
+.ig-name { font-weight: 700; font-size: .9rem; color:#111827; }
+.ig-dots { margin-left: auto; color:#6b7280; }
+.ig-thumb { width:100%; aspect-ratio: 1 / 1; object-fit: cover; background:#f3f4f6; }
+.ig-thumb-fallback { display:flex; align-items:center; justify-content:center; color:#9ca3af; }
+.ig-actions { display:flex; gap:12px; padding:10px 12px; color:#374151; }
+.ig-caption { padding: 0 12px 12px; font-size: .9rem; color:#374151; }
+.ig-caption .ig-strong { font-weight:700; }
+/* --- 既存のCSSはそのまま --- */
+
+/* ソーシャルプレビュー：モバイル → 1列、PC → 2列 */
+.social-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  align-items: start;
+}
+@media (min-width: 1024px) {
+  .social-grid { grid-template-columns: 1fr 1fr; }
+}
+.social-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 比率ラッパー（古い端末でも安定） */
+.ratio-16x9, .ratio-1x1 {
+  position: relative;
+  width: 100%;
+  background: #f3f4f6;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.ratio-16x9::before { content: ""; display: block; padding-top: 56.25%; }
+.ratio-1x1::before  { content: ""; display: block; padding-top: 100%; }
+.media, .media-fallback {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+}
+.media { object-fit: cover; display: block; }
+.media-fallback { display:flex; align-items:center; justify-content:center; color:#9ca3af; font-size:.9rem; }
+
+/* X */
+.social-title { font-weight: 600; font-size: clamp(.85rem,.8rem + .3vw, .95rem); color:#374151; padding: 8px 12px 0; }
+.x-meta { padding: 10px 12px 12px; }
+.x-title { font-weight: 700; margin-bottom: 4px; font-size: clamp(.95rem, .9rem + .4vw, 1.05rem); overflow-wrap:anywhere; }
+.x-desc  { font-size: .9rem; color:#4b5563; margin-bottom: 6px; line-height: 1.35; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.x-domain{ font-size: .8rem; color:#6b7280; overflow-wrap:anywhere; }
+
+/* Instagram */
+.ig-header { display:flex; align-items:center; gap:8px; padding: 8px 12px 0; }
+.ig-avatar { width: 28px; height: 28px; border-radius: 50%; background: conic-gradient(#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5); flex:0 0 28px; }
+.ig-name { font-weight:700; font-size:.95rem; color:#111827; }
+.ig-dots { margin-left:auto; color:#6b7280; }
+.ig-actions { display:flex; gap:14px; padding:10px 12px; color:#374151; font-size:1.15rem; }
+.ig-caption { padding: 0 12px 12px; font-size:.9rem; color:#374151; line-height:1.35; }
+.ig-caption .ig-strong { font-weight:700; }
+
+/* モバイルの余白・読みやすさを微調整 */
+@media (max-width: 420px) {
+  .x-meta, .ig-actions, .ig-caption { padding-left:10px; padding-right:10px; }
+  .x-title { -webkit-line-clamp:2; }
+}

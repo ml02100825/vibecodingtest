@@ -4,147 +4,206 @@ import { useState } from "react";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 
+type AuditItem = { id: string | number; title: string; fix?: string };
+type Preview = { title?: string; description?: string; image?: string };
+type AuditResult = {
+  score: number;
+  good: AuditItem[];
+  bad: AuditItem[];
+  risky: AuditItem[];
+  preview?: Preview;
+};
+
 export default function Page() {
   const [url, setUrl] = useState("");
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<AuditResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const scoreToTone = (s: number) =>
+    (s >= 80 ? "good" : s >= 50 ? "mid" : "bad") as "good" | "mid" | "bad";
+
+  const circleColor = { good: "#16a34a", mid: "#f59e0b", bad: "#dc2626" } as const;
+  const labelText = { good: "VeryGood", mid: "Good", bad: "bad" } as const;
+  const toneCardClass = { good: "tone-good", mid: "tone-mid", bad: "tone-bad" } as const;
+  const toneLabelClass = { good: "label-good", mid: "label-mid", bad: "label-bad" } as const;
 
   async function onAnalyze() {
-    const r = await fetch(`/api/audit?url=${encodeURIComponent(url)}`);
-    const data = await r.json();
-    if (data.ok) setResult(data.result);
+    setLoading(true);
+    setErr(null);
+    setResult(null);
+    try {
+      const r = await fetch(`/api/audit?url=${encodeURIComponent(url)}`);
+      const data = await r.json();
+      if (!data.ok) throw new Error(data.error || "解析に失敗しました");
+      setResult(data.result as AuditResult);
+    } catch (e: any) {
+      setErr(e?.message ?? "解析に失敗しました");
+    } finally {
+      setLoading(false);
+    }
   }
 
+  const tone = result ? scoreToTone(result.score) : null;
+  const pv: Preview = result?.preview ?? {};
+  const siteHost = (() => {
+    try {
+      const u = url?.startsWith("http") ? url : `https://${url}`;
+      return new URL(u).hostname;
+    } catch {
+      return url || "";
+    }
+  })();
+  const pvTitle = pv.title || siteHost || "プレビュー";
+  const pvDesc = pv.description || "説明テキストが見つかりませんでした。";
+  const pvImage = pv.image || "";
+
   return (
-    <div className="min-h-screen">
-      <div className="max-w-6xl mx-auto py-10 px-4 space-y-8">
-        {/* ヘッダー */}
-        <div>
-          <h1 className="text-2xl font-bold mb-2">SEO メタタグ解析ツール</h1>
-          <p className="text-gray-600 text-sm">
-            サイトの SEO タグを解析し、スコアと改善ポイントを確認できます。
-          </p>
-        </div>
+    <div className="min-h-screen bg-gray-50 text-gray-900">
+      <div className="max-w-screen-xl mx-auto px-4 py-8">
+        <div className="container-grid">
+          <main className="main-col">
+            <h1 className="text-2xl font-bold text-center mb-6">SEO メタタグ解析ツール</h1>
 
-        {/* 入力フォーム */}
-        <div className="bg-white rounded-xl shadow p-6">
-          <label className="block mb-2 text-sm font-medium">URL を入力してください</label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className="flex-1 border rounded-lg px-4 py-2"
-              placeholder="https://example.com"
-            />
-            <button
-              onClick={onAnalyze}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-            >
-              解析
-            </button>
-          </div>
-        </div>
-
-        {/* 結果 */}
-        {result && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* SEO 解析結果 */}
-            <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center justify-center">
-              <h2 className="text-lg font-semibold mb-4">SEO 解析結果</h2>
-              <div style={{ width: 120, height: 120 }}>
-                <CircularProgressbar
-                  value={result.score}
-                  text={`${result.score}`}
-                  styles={buildStyles({
-                    pathColor:
-                      result.score >= 80
-                        ? "#16a34a"
-                        : result.score >= 50
-                        ? "#f59e0b"
-                        : "#dc2626",
-                    textColor: "#111827",
-                    trailColor: "#e5e7eb",
-                  })}
+            {/* 入力 */}
+            <section className="card mb-6">
+              <label className="block mb-2 text-sm font-medium">サイトURLを入力してください</label>
+              <div className="stack-sm">
+                <input
+                  type="text"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") onAnalyze(); }}
+                  className="input-blue"
+                  placeholder="https://example.com"
                 />
+                <button onClick={onAnalyze} disabled={loading || !url} className="btn">
+                  {loading ? "解析中…" : "解析"}
+                </button>
               </div>
-              <p className="mt-3 text-sm text-gray-600">
-                {result.score >= 80
-                  ? "とても良い"
-                  : result.score >= 60
-                  ? "良い"
-                  : "改善が必要"}
-              </p>
-            </div>
+            </section>
 
-            {/* SEO ヘルスサマリー */}
-            <div className="bg-white rounded-xl shadow p-6">
-              <h2 className="text-lg font-semibold mb-4">SEO ヘルスサマリー</h2>
-              <div className="space-y-2 text-sm">
-                <p className="text-green-700">
-                  ✅ 成功: <span className="font-bold">{result.good.length}</span>
-                </p>
-                <p className="text-yellow-600">
-                  ⚠️ 注意: <span className="font-bold">{result.risky.length}</span>
-                </p>
-                <p className="text-red-600">
-                  ❌ 失敗: <span className="font-bold">{result.bad.length}</span>
-                </p>
+            {/* エラー */}
+            {err && (
+              <div className="card mb-6" style={{ background: "#FEF2F2", borderColor: "#FECACA", color: "#B91C1C" }}>
+                {err}
               </div>
-              <div className="mt-4 bg-gray-100 rounded-full h-3 overflow-hidden">
-                <div
-                  className="bg-green-500 h-3"
-                  style={{
-                    width: `${
-                      (result.good.length /
-                        (result.good.length +
-                          result.risky.length +
-                          result.bad.length)) *
-                        100 || 0
-                    }%`,
-                  }}
-                />
-              </div>
-            </div>
+            )}
 
-            {/* SEO インサイト */}
-            <div className="bg-white rounded-xl shadow p-6">
-              <h2 className="text-lg font-semibold mb-4">SEO インサイト</h2>
-              <div className="space-y-3 text-sm">
-                {/* 赤: 高優先度 */}
-                {result.bad.map((b: any) => (
-                  <div
-                    key={b.id}
-                    className="p-2 rounded border border-red-300 bg-red-50 text-red-700"
-                  >
-                    <span className="font-semibold">高優先度:</span> {b.title}
-                    {b.fix && <div className="text-gray-600 text-xs mt-1">対策: {b.fix}</div>}
+            {/* 解析結果 */}
+            {result && tone && (
+              <section className={`card result-card ${toneCardClass[tone]}`}>
+                {/* 右上に固定：VeryGood / Good / bad */}
+                <div className={`result-label ${toneLabelClass[tone]}`}>{labelText[tone]}</div>
+
+                <h2 className="text-lg font-semibold mb-4">SEO 解析結果</h2>
+
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-10 mb-6">
+                  <div style={{ width: 120, height: 120 }}>
+                    <CircularProgressbar
+                      value={result.score}
+                      text={`${result.score}`}
+                      styles={buildStyles({
+                        pathColor: circleColor[tone],
+                        textColor: "#111827",
+                        trailColor: "#e5e7eb",
+                      })}
+                    />
                   </div>
-                ))}
 
-                {/* 黄: 中優先度 */}
-                {result.risky.map((r: any) => (
-                  <div
-                    key={r.id}
-                    className="p-2 rounded border border-yellow-300 bg-yellow-50 text-yellow-700"
-                  >
-                    <span className="font-semibold">中優先度:</span> {r.title}
-                    {r.fix && <div className="text-gray-600 text-xs mt-1">対策: {r.fix}</div>}
-                  </div>
-                ))}
+                  <div className="text-sm w-full">
+                    {/* ▼ 重複を解消：ここは「Passed/Warn/Failed」のみ残す ▼ */}
+                    <div className="summary-grid">
+                      <div className="summary-box good">✅ Passed: {result.good.length}</div>
+                      <div className="summary-box warn">⚠️ Warnings: {result.risky.length}</div>
+                      <div className="summary-box bad">❌ Failed: {result.bad.length}</div>
+                    </div>
 
-                {/* 緑: 低優先度 */}
-                {result.good.map((g: any) => (
-                  <div
-                    key={g.id}
-                    className="p-2 rounded border border-green-300 bg-green-50 text-green-700"
-                  >
-                    <span className="font-semibold">低優先度:</span> {g.title}
+                    <div className="progress-bar">
+                      <div
+                        className="progress-bar-fill"
+                        style={{
+                          width: `${
+                            ((result.good.length + result.risky.length) /
+                              (result.good.length + result.risky.length + result.bad.length || 1)) * 100
+                          }%`,
+                        }}
+                      />
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+                </div>
+
+                {/* インサイト */}
+                <div className="insight-grid">
+                  <div>
+                    <h3 className="font-medium mb-2">良かった点</h3>
+                    {result.good.length ? (
+                      result.good.map((g) => <div key={g.id} className="insight-box insight-good">{g.title}</div>)
+                    ) : (
+                      <p className="text-sm text-gray-500">なし</p>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-medium mb-2">改善点</h3>
+                    {result.bad.length || result.risky.length ? (
+                      <>
+                        {result.bad.map((b) => (
+                          <div key={b.id} className="insight-box insight-bad">
+                            {b.title} {b.fix && <span>（対策: {b.fix}）</span>}
+                          </div>
+                        ))}
+                        {result.risky.map((r) => (
+                          <div key={r.id} className="insight-box insight-warn">
+                            {r.title} {r.fix && <span>（対策: {r.fix}）</span>}
+                          </div>
+                        ))}
+                      </>
+                    ) : (
+                      <p className="text-sm text-gray-500">なし</p>
+                    )}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* ソーシャルプレビュー（既存のまま） */}
+            {result && (
+              <section className="card">
+                <h2 className="text-lg font-semibold mb-4">ソーシャルプレビュー</h2>
+                <div className="social-grid">
+                  {/* X */}
+                  <article className="social-card x-card">
+                    <div className="social-title">X プレビュー</div>
+                    <div className="ratio-16x9">
+                      {pvImage ? <img src={pvImage} alt="X preview" className="media" /> : <div className="media-fallback">No Image</div>}
+                    </div>
+                    <div className="x-meta">
+                      <div className="x-title">{pvTitle}</div>
+                      <div className="x-desc">{pvDesc}</div>
+                      <div className="x-domain">{siteHost || "example.com"}</div>
+                    </div>
+                  </article>
+
+                  {/* Instagram */}
+                  <article className="social-card ig-card">
+                    <header className="ig-header">
+                      <div className="ig-avatar" />
+                      <div className="ig-name">{siteHost || "example.com"}</div>
+                      <div className="ig-dots">•••</div>
+                    </header>
+                    <div className="ratio-1x1">
+                      {pvImage ? <img src={pvImage} alt="Instagram preview" className="media" /> : <div className="media-fallback">No Image</div>}
+                    </div>
+                    <div className="ig-actions"><span>♡</span><span>💬</span><span>↗</span></div>
+                    <div className="ig-caption">
+                      <span className="ig-strong">{siteHost || "site"}</span> {pvTitle} — {pvDesc}
+                    </div>
+                  </article>
+                </div>
+              </section>
+            )}
+          </main>
+        </div>
       </div>
     </div>
   );
