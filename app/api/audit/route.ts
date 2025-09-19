@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
   }
 
   // cheerio で解析
-  const $ = load(html);
+  const $ = cheerio.load(html);
   const good: Item[] = [];
   const bad: Item[] = [];
   const risky: Item[] = [];
